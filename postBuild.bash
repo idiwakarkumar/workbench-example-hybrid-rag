@@ -1,8 +1,17 @@
 #!/bin/bash
 set -e
+# Fix SSL issues by creating a custom conda configuration
+mkdir -p $HOME/.conda
+cat > $HOME/.conda/condarc << EOF
+ssl_verify: false
+channels:
+  - defaults
+channel_priority: flexible
+EOF
 
-mkdir -p ~/.conda
-echo "ssl_verify: true" > ~/.conda/condarc
+# Update certificates first
+sudo -E apt-get update
+sudo -E apt-get -y install --reinstall ca-certificates openssl
 
 # Install deps to run the API in a seperate venv to isolate different components
 conda create --name api-env -y python=3.10 pip
