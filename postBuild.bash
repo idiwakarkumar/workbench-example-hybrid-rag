@@ -35,7 +35,10 @@ sudo -E apt-get -y install ca-certificates curl || echo "ca-certificates/curl in
 sudo -E install -m 0755 -d /etc/apt/keyrings
 sudo -E curl -fsSL --insecure https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
 sudo -E chmod a+r /etc/apt/keyrings/docker.asc
-sudo -E echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo -E tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Properly format the echo command to avoid Windows line ending issues
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo -E tee /etc/apt/sources.list.d/docker.list > /dev/null
+
 sudo -E apt-get update || echo "apt-get update failed, continuing anyway"
 sudo -E apt-get -y install docker-ce-cli || echo "docker-ce-cli install failed, continuing anyway"
 
@@ -52,14 +55,14 @@ sudo -E chown workbench /data
 sudo -E curl -s --insecure https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo -E bash
 sudo -E apt-get install git-lfs || echo "git-lfs install failed, continuing anyway"
 
-# Set up Docker access
-cat <<EOM | sudo tee /etc/profile.d/docker-in-docker.sh > /dev/null
+# Fix here-document for Docker access (proper EOF delimiter)
+sudo tee /etc/profile.d/docker-in-docker.sh > /dev/null << 'EOF'
 if ! groups workbench | grep docker > /dev/null; then
-    docker_gid=\$(stat -c %g /var/host-run/docker.sock)
-    sudo groupadd -g \$docker_gid docker
+    docker_gid=$(stat -c %g /var/host-run/docker.sock)
+    sudo groupadd -g $docker_gid docker
     sudo usermod -aG docker workbench
 fi
-EOM
+EOF
 
 # Grant user sudo access
 echo "workbench ALL=(ALL) NOPASSWD:ALL" | \
