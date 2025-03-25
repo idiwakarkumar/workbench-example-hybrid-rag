@@ -9,6 +9,8 @@ channels:
 channel_priority: flexible
 EOF
 
+conda config --set ssl_verify false 
+
 # Update certificates first
 sudo -E apt-get update
 sudo -E apt-get -y install --reinstall ca-certificates openssl
